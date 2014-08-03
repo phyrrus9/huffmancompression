@@ -15,22 +15,24 @@
 
 struct file_header
 {
-	unsigned char ncompressed; //the header is followed by ncompressed
-						  //struct compression_table_entry entries
-	unsigned char wastebits;   //used to determine when to stop decompressing
-						  //the number of extra zero bits at EOF
+	unsigned char  nncompressed; //the header is followed by 256 - nncompressed
+						    //struct compression_table_entry entries
+	unsigned char  wastebits;    //used to determine when to stop decompressing
+						    //the number of extra zero bits at EOF
 };
 
 struct compression_table_entry
 {
 	unsigned char value;
-	float         percent;
+	unsigned short percent; //this is actually the percent
+					    //rounded to the nearest thousandth
+					    //and then multiplied by 1000
 };
 
 struct compression_table
 {
 	struct compression_table_entry *table_data;
-	unsigned char                   table_count;
+	unsigned short                  table_count;
 };
 
 struct internal_compression_table_entry
@@ -42,21 +44,20 @@ struct internal_compression_table_entry
 struct internal_compression_table
 {
 	struct internal_compression_table_entry *table_data;
-	unsigned char                            table_count;
+	unsigned short                           table_count;
 };
 
 typedef unsigned char wbits;
 #define ftotalbits(fsize, waste) ((fsize - sizeof(wbits)) + waste)
-void compress                              (FILE *in, FILE *out, binarytree compression);           //
-void decompress                            (FILE *in, FILE *out);                                   //
-binarytree * initdatalist                  (unsigned char n);                                       //√
-unsigned char populatedatalist_file        (binarytree **datalist, char *fname);                    //√
-unsigned char populatedatalist_table       (binarytree **datalist, struct compression_table table); //√
-void genhuffmantree                        (binarytree *datalist, unsigned char n);                 //√
-struct compression_table gentable          (binarytree datalist, unsigned char n);                  //
-struct internal_compression_table genitable(binarytree datalist, unsigned char n);                  //√
-char *gentablestr                          (binarytree datalist, unsigned char c);                  //√
-void gentablestr_r                         (struct tree_node *node, unsigned char c, char *str);    //√
-void BinaryTree2DoubleLinkedList           (binarytree root, struct tree_node **head);              //√
+void compress                              (FILE *in, FILE *out, binarytree compression);            //√
+void decompress                            (FILE *in, FILE *out);                                    //
+binarytree * initdatalist                  (unsigned short n);                                       //√
+unsigned short populatedatalist_file       (binarytree **datalist, char *fname);                     //√
+unsigned short populatedatalist_table      (binarytree **datalist, struct compression_table table);  //√
+void genhuffmantree                        (binarytree *datalist, unsigned short n);                 //√
+struct compression_table gentable          (binarytree datalist, unsigned short n);                  //√
+struct internal_compression_table genitable(binarytree datalist, unsigned short n);                  //√
+void BinaryTree2DoubleLinkedList           (binarytree root, struct tree_node **head);               //√
+void assign_leafs(binarytree list, struct internal_compression_table *tab);
 
 #endif

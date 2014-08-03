@@ -14,13 +14,21 @@
 
 int main(int argc, char * argv[])
 {
+	FILE *in, *out;
 	binarytree * datalist = NULL;
-	unsigned char n, c;
-	struct internal_compression_table tab;
-	n = c = populatedatalist_file(&datalist, argv[1]);
+	unsigned short n;
+	printf("Begin huffman encode\n"
+		  "\tGathering data\n");
+	n = populatedatalist_file(&datalist, argv[1]);
+	printf("\tGenerating tree\n");
 	genhuffmantree(datalist, n);
-	printf("%lu\n", sizeof(struct tree_node));
-	print_leafs(datalist[0]);
-	tab = genitable(*datalist, n);
+	printf("\tGetting files ready\n");
+	in = fopen(argv[1], "rb");
+	out = fopen(argv[2], "wb");
+	compress(in, out, *datalist);
+	printf("\tCleaning up\n");
+	fclose(out);
+	fclose(in);
+	printf("Done\n");
 	return 0;
 }

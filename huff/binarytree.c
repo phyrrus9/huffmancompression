@@ -94,3 +94,15 @@ void print_leafs(binarytree list)
 	memset(val, 0, 256);
 	print_leafs_p(list, val);
 }
+
+unsigned short count_nodes_p(struct tree_node *node)
+{
+	if (node == NULL) return 0;
+	if (node->leaf) return 1;
+	return count_nodes_p(node->l) + count_nodes_p(node->r);
+}
+
+unsigned short count_nodes(binarytree tree)
+{
+	return count_nodes_p(tree);
+}

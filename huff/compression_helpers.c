@@ -12,7 +12,7 @@
 
 unsigned char found;
 
-void genhuffmantree(binarytree *datalist, unsigned char n)
+void genhuffmantree(binarytree *datalist, unsigned short n)
 {
 	sortnodes(datalist, n);
 	while (n > 1)
@@ -30,11 +30,11 @@ void genhuffmantree(binarytree *datalist, unsigned char n)
 	}
 }
 
-struct compression_table gentable(binarytree datalist, unsigned char n)
+struct compression_table gentable(binarytree datalist, unsigned short n)
 {
 	struct compression_table ret;
 	struct tree_node *dll = NULL, *dlltmp = NULL, *datalisttmp = copy_node(datalist);
-	unsigned char i;
+	unsigned short i;
 	ret.table_data = malloc(sizeof(struct compression_table_entry) * n);
 	BinaryTree2DoubleLinkedList(datalisttmp, &dll);
 	for (dlltmp = dll, i = 0; i < n && dlltmp != NULL; dlltmp = dlltmp->r)
@@ -42,81 +42,60 @@ struct compression_table gentable(binarytree datalist, unsigned char n)
 		if (dlltmp->leaf)
 		{
 			ret.table_data[i].value = dlltmp->value;
-			ret.table_data[i++].percent = dlltmp->percent;
+			ret.table_data[i++].percent = (unsigned short)(dlltmp->percent * 1000);
 		}
 	}
+	//free_node(datalisttmp);
 	return ret;
 }
 
-struct internal_compression_table genitable(binarytree datalist, unsigned char n)
+struct internal_compression_table genitable(binarytree datalist, unsigned short n)
 {
 	struct internal_compression_table ret;
-	struct compression_table table = gentable(datalist, n);
-	char *tmp;
-	unsigned char i;
+	unsigned short i;
 	ret.table_data = malloc(sizeof(struct internal_compression_table_entry) * n);
 	ret.table_count = n;
 	for (i = 0; i < n; i++)
-	{
-		ret.table_data[i].value = table.table_data[i].value;
-		tmp = gentablestr(datalist, table.table_data[i].value);
-		ret.table_data[i].str = malloc(strlen(tmp) + 1);
-		memset(ret.table_data[i].str, 0, strlen(tmp) + 1);
-		strcpy(ret.table_data[i].str, tmp);
-		free(tmp);
-	}
+		ret.table_data[i].str = NULL;
+	assign_leafs(datalist, &ret);
 	return ret;
 }
 
-void gentablestr_r(struct tree_node *node, unsigned char c, char *str)
+void assign_leafs_p(binarytree list, char *val, struct internal_compression_table *tab)
 {
-	if (node->value != c && !found)
+	unsigned short i;
+	if (list->leaf)
 	{
-		if (node->l != NULL)
+		for (i = 0; tab->table_data[i].str; i++);
+		tab->table_data[i].str = malloc(strlen(val) + 1);
+		strcpy(tab->table_data[i].str, val);
+		tab->table_data[i].value = list->value;
+	}
+	else
+	{
+		if (list->l)
 		{
-			char *strl = strdup(str);
-			strcat(strl, "0");
-			gentablestr_r(node->l, c, strl);
-			if (node->l->value == c)
-			{
-				strcpy(str, strl);
-				goto done;
-			}
-			/*else if (node->l->leaf)
-				str[strlen(str) - 1] = 0;*/
+			char *vall = strdup(val);
+			strcat(vall, "0");
+			assign_leafs_p(list->l, vall, tab);
+			free(vall);
 		}
-		if (node->r != NULL)
+		if (list->r)
 		{
-			char *strr = strdup(str);
-			strcat(strr, "1");
-			gentablestr_r(node->r, c, strr);
-			if (node->r->value == c)
-			{
-				strcpy(str, strr);
-				goto done;
-			}
-			/*else if (node->r->leaf)
-				str[strlen(str) - 1] = 0;*/
+			char *valr = strdup(val);
+			strcat(valr, "1");
+			assign_leafs_p(list->r, valr, tab);
+			free(valr);
 		}
 	}
-	else goto done;
-	return;
-done:
-	found = 0x1;
 }
 
-char *gentablestr(binarytree datalist, unsigned char c)
+void assign_leafs(binarytree list, struct internal_compression_table *tab)
 {
-	found = 0x0;
-	char *tmp = malloc(256), *ret = NULL;
-	memset(tmp, 0, 256);
-	gentablestr_r(datalist, c, tmp);
-	ret = malloc(strlen(tmp) + 1);
-	memset(ret, 0, strlen(tmp) + 1);
-	strcpy(ret, tmp);
-	memset(tmp, 0, 256);
-	free(tmp);
-	return ret;
+	char *val = malloc(256);
+	memset(val, 0, 256);
+	assign_leafs_p(list, val, tab);
+	free(val);
 }
 
 void BinaryTree2DoubleLinkedList(binarytree root, struct tree_node **head)

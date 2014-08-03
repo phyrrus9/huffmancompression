@@ -25,5 +25,6 @@ struct tree_node *copy_node(struct tree_node *n);
 void sortnodes(binarytree *nodes, int count);
 void print_leafs_p(binarytree list, char *val);
 void print_leafs(binarytree list);
+unsigned short count_nodes(binarytree tree);
 
 #endif
